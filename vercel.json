@@ -1,5 +1,0 @@
-{
-    "buildCommand": "cd public-asset-web && npm install && npm run build",
-    "outputDirectory": "public-asset-web/.next",
-    "framework": "nextjs"
-}
