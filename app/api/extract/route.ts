@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { LRUCache } from 'lru-cache';
+
 import { getExtractor } from '@/lib/extractors';
 import { validateBehanceUrl, isUrlAllowed } from '@/lib/security';
+import { extractionCache as cache } from '@/lib/cache';
 
-const cache = new LRUCache<string, any>({
-    max: 500,
-    ttl: 1000 * 60 * 10, // 10 minutes
-});
+// Removed local cache definition in favor of shared singleton
+
 
 // Rate limiting map (simple in-memory)
 const rateLimitMap = new Map<string, number>();
