@@ -1,47 +1,102 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8"/>
-    <title>BeDownloader Extension Options</title>
-</head>
-<style>
-    * {
-        font-family: sans-serif;
-    }
-    h3 {
-        border-bottom: solid 1px #d9d9d9;
-        padding: 0 0 5px 0;
-    }
-    label {
-        position: relative;
-        display: block;
-        padding-left: 30px;
-        margin-bottom: 5px;
-    }
-    label input {
-        position: absolute;
-        left: 0;
-        top: 0;
-    }
-    #be-downloader-logo {
-        display: inline-block;
-        width: 32px;
-        height: auto;
-        margin-right: 10px;
-        vertical-align: middle;
-    }
-    h1 {
-        display: inline-block;
-        vertical-align: middle;
-    }
 
-</style>
+<head>
+    <meta charset="utf-8" />
+    <title>BeDownloader Options</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            background: #f9f9f9;
+            color: #333;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        .container {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        button {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #222;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 13px;
+            text-align: center;
+            height: 18px;
+            color: #10B981;
+        }
+    </style>
+</head>
+
 <body>
-<img id="be-downloader-logo" src="icons/icon128.png" alt="BeDownloader"/>
-<h1>BeDownloader Extension Options</h1>
-<h3>Download Buttons</h3>
-<label><input id="btDlAllFolder" type="checkbox"/> <b>Download All</b> button saves files to separate gallery/album/playlist folder.</label>
-<label><input id="btDlFolder" type="checkbox"/> <b>Download</b> button saves file to separate gallery/album/playlist folder.</label>
-<script src="options.js"></script>
+    <div class="container">
+        <h2>
+            <img src="icons/icon32.png" width="24" height="24">
+            BeDownloader Settings
+        </h2>
+
+        <div class="form-group">
+            <label for="webAppUrl">Web App URL</label>
+            <input type="text" id="webAppUrl" placeholder="http://localhost:3000">
+            <p class="hint">Your local URL or Vercel deployment (e.g., https://bedownloader.vercel.app)</p>
+        </div>
+
+        <button id="save">Save Settings</button>
+        <div id="status" class="status"></div>
+    </div>
+    <script src="options.js"></script>
 </body>
+
 </html>

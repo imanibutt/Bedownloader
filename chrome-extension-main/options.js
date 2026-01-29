@@ -1,43 +1,20 @@
-// chrome.storage.local.clear()
+// Save options to chrome.storage
+const saveOptions = () => {
+    const webAppUrl = document.getElementById('webAppUrl').value.replace(/\/$/, ""); // Remove trailing slash
 
-const checkBoxOptions = {
-    btDlAllFolder: document.getElementById('btDlAllFolder'),
-    btDlFolder: document.getElementById('btDlFolder')
-}
+    chrome.storage.local.set({ webAppUrl }, () => {
+        const status = document.getElementById('status');
+        status.textContent = 'Settings saved!';
+        setTimeout(() => { status.textContent = ''; }, 2000);
+    });
+};
 
-const checkBoxOptionsDefaultValues = {
-    btDlAllFolder: true,
-    btDlFolder: false
-}
-const getSetCheckBoxVal = (el) => {
-    chrome.storage.local.get(el.id, (res) => {
-        if (res.hasOwnProperty(el.id)) {
-            el.checked = res[el.id]
-        } else if (checkBoxOptionsDefaultValues.hasOwnProperty(el.id)) {
-            el.checked = checkBoxOptionsDefaultValues[el.id]
-        }
-        chrome.storage.local.set({[el.id]: el.checked})
-    })
-}
+// Restore options from chrome.storage
+const restoreOptions = () => {
+    chrome.storage.local.get({ webAppUrl: 'http://localhost:3000' }, (items) => {
+        document.getElementById('webAppUrl').value = items.webAppUrl;
+    });
+};
 
-const setCheckBoxVal = (el) => {
-    chrome.storage.local.set({[el.id]: el.checked})
-    chrome.runtime.sendMessage({
-        option: true,
-        optionName: el.id,
-        optionVal: el.checked
-    })
-}
-
-// Init
-for (const key in checkBoxOptions) {
-    const checkbox = checkBoxOptions[key]
-
-    // Get and set default values
-    getSetCheckBoxVal(checkbox)
-
-    // Set value on click event
-    checkbox.onclick = () => {
-        setCheckBoxVal(checkbox)
-    }
-}
+document.addEventListener('DOMContentLoaded', restoreOptions);
+document.getElementById('save').addEventListener('click', saveOptions);

@@ -32,30 +32,36 @@ const injectButton = () => {
 
     const btn = document.createElement('button');
     btn.id = 'be-downloader-btn';
-    btn.innerText = 'Open in BeDownloader';
     btn.style.cssText = `
         position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 999999;
-        padding: 10px 16px;
+        bottom: 24px;
+        right: 24px;
+        z-index: 2147483647;
+        padding: 12px 20px;
         background: #000;
         color: #fff;
-        border: 1px solid #444;
-        border-radius: 8px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        transition: all 0.2s ease;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         display: flex;
-        alignment: center;
-        gap: 8px;
+        align-items: center;
+        gap: 10px;
+        letter-spacing: -0.2px;
+        backdrop-filter: blur(8px);
     `;
-
-    // Add a small icon representation (Optional, using text for now)
-    // btn.innerHTML = `<span>📂</span> Open in PublicAsset`;
+    btn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Extract with BD</span>
+    `;
 
     btn.onmouseover = () => {
         btn.style.transform = 'translateY(-2px)';
