@@ -1,5 +1,5 @@
-
-import { chromium } from 'playwright';
+import * as cheerio from 'cheerio';
+import axios from 'axios';
 import { Extractor, MediaItem } from './types';
 
 export class InstagramExtractor implements Extractor {
@@ -10,28 +10,21 @@ export class InstagramExtractor implements Extractor {
     }
 
     async extract(url: string): Promise<MediaItem[]> {
-        const browser = await chromium.launch({ headless: true });
-        const context = await browser.newContext({
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        });
-        const page = await context.newPage();
-
         try {
-            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-
-            // Basic extraction logic for Instagram (meta tags or specific selectors)
-            // This is a simplified version; production IG extraction is hard due to login walls.
-            // We'll try open graph tags first.
-
-            const meta = await page.evaluate(() => {
-                const getMeta = (name: string) => document.querySelector(`meta[property="${name}"]`)?.getAttribute('content');
-                return {
-                    image: getMeta('og:image'),
-                    video: getMeta('og:video'),
-                    title: getMeta('og:title') || 'Instagram Post',
-                    type: getMeta('og:type')
-                };
+            const response = await axios.get(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                },
+                timeout: 10000
             });
+
+            const $ = cheerio.load(response.data);
+
+            const meta = {
+                image: $('meta[property="og:image"]').attr('content'),
+                video: $('meta[property="og:video"]').attr('content'),
+                title: $('meta[property="og:title"]').attr('content') || 'Instagram Post',
+            };
 
             const results: MediaItem[] = [];
 
@@ -53,28 +46,17 @@ export class InstagramExtractor implements Extractor {
                     thumbUrl: meta.image,
                     downloadUrl: meta.image
                 });
-            } else {
-                // Fallback: try to find image in DOM
-                const img = await page.$eval('img', (el) => el.src).catch(() => null);
-                if (img) {
-                    results.push({
-                        id: 'ig-image-fallback',
-                        title: 'Instagram Image',
-                        type: 'image',
-                        ext: 'jpg',
-                        thumbUrl: img,
-                        downloadUrl: img
-                    });
-                }
+            }
+
+            if (results.length === 0) {
+                throw new Error('No public media found. This post may be private or requires login.');
             }
 
             return results;
 
-        } catch (e) {
-            console.error('IG Extract error', e);
-            throw new Error('Failed to extract Instagram content. Login may be required.');
-        } finally {
-            await browser.close();
+        } catch (e: any) {
+            console.error('IG Extract error:', e.message);
+            throw new Error('Failed to extract Instagram content. Private posts or login-walls are not supported via web-extraction.');
         }
     }
 }
