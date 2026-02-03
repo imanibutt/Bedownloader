@@ -172,9 +172,25 @@ function ExtractionContent() {
                         <span className="brandname">BeDownloader</span>
                     </button>
                 </nav>
-                <div className="loading-wrap">
-                    <div className="spinner" />
-                    <p className="text-secondary">Analyzing content…</p>
+
+                <div className="loading-card" role="status" aria-live="polite">
+                    <div className="loader" aria-hidden />
+                    <div className="loading-title">Analyzing content</div>
+                    <div className="text-secondary loading-sub">
+                        Large projects can take 10–30 seconds.
+                    </div>
+
+                    <div className="loading-steps">
+                        <div className="step done">
+                            <span className="step-dot" /> Fetching project
+                        </div>
+                        <div className="step active">
+                            <span className="step-dot" /> Extracting assets
+                        </div>
+                        <div className="step">
+                            <span className="step-dot" /> Preparing downloads
+                        </div>
+                    </div>
                 </div>
             </div>
         );
