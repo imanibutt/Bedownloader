@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { downloadZipFromApi } from '@/lib/downloadZip';
 import { downloadFileFromApi } from '@/lib/downloadFile';
@@ -58,22 +58,26 @@ function ExtractionContent() {
         return () => controller.abort();
     }, [targetUrl, router]);
 
+    const projectName = useMemo(() => {
+        const safe = targetUrl?.split('/').pop()?.split('?')[0] || 'downloaded-assets';
+        return safe || 'downloaded-assets';
+    }, [targetUrl]);
+
     const handleDownloadAll = async () => {
         if (!isConfirmed || results.length === 0) return;
 
         setDownloading(true);
         try {
-            const projectName = targetUrl?.split('/').pop()?.split('?')[0] || 'downloaded-assets';
             const zipFilename = `${projectName}-assets.zip`;
 
-            const selectedAssets = results.map(r => ({
+            const selectedAssets = results.map((r) => ({
                 url: r.downloadUrl,
-                filename: `${r.title}.${r.ext}`
+                filename: `${r.title}.${r.ext}`,
             }));
 
             await downloadZipFromApi('/api/download-zip', zipFilename, {
                 assets: selectedAssets,
-                filename: zipFilename
+                filename: zipFilename,
             });
         } catch (err) {
             console.error('Download failed', err);
@@ -85,7 +89,7 @@ function ExtractionContent() {
     const downloadByType = async (type: string) => {
         if (!isConfirmed || results.length === 0) return;
 
-        const filtered = results.filter(item => {
+        const filtered = results.filter((item) => {
             if (type === 'image') return item.type === 'image';
             if (type === 'video') return item.type === 'video';
             if (type === 'gif') return item.type.includes('gif') || item.downloadUrl.toLowerCase().endsWith('.gif');
@@ -96,12 +100,11 @@ function ExtractionContent() {
 
         setDownloading(true);
         try {
-            const projectName = targetUrl?.split('/').pop()?.split('?')[0] || 'assets';
             const zipFilename = `${projectName}-${type}s.zip`;
 
             await downloadZipFromApi('/api/download-zip', zipFilename, {
-                assets: filtered.map(r => ({ url: r.downloadUrl, filename: `${r.title}.${r.ext}` })),
-                filename: zipFilename
+                assets: filtered.map((r) => ({ url: r.downloadUrl, filename: `${r.title}.${r.ext}` })),
+                filename: zipFilename,
             });
         } catch (err) {
             console.error(`Download failed for ${type}s`, err);
@@ -110,33 +113,31 @@ function ExtractionContent() {
         }
     };
 
-    const hasImages = results.some(item => item.type === 'image');
-    const hasVideos = results.some(item => item.type === 'video');
-    const hasGifs = results.some(item => item.type.includes('gif') || item.downloadUrl.toLowerCase().endsWith('.gif'));
+    const hasImages = results.some((item) => item.type === 'image');
+    const hasVideos = results.some((item) => item.type === 'video');
+    const hasGifs = results.some((item) => item.type.includes('gif') || item.downloadUrl.toLowerCase().endsWith('.gif'));
 
     const handleVariantChange = (assetId: string, newUrl: string) => {
-        setResults(prev => prev.map(item => {
-            if (item.id === assetId) {
-                return { ...item, downloadUrl: newUrl };
-            }
-            return item;
-        }));
+        setResults((prev) =>
+            prev.map((item) => {
+                if (item.id === assetId) return { ...item, downloadUrl: newUrl };
+                return item;
+            })
+        );
     };
 
     if (loading) {
         return (
             <div className="container section-padding text-center fade-in">
-                <nav style={{ marginBottom: '64px' }}>
-                    <img
-                        src="/logo.png?v=1"
-                        alt="BeDownloader"
-                        style={{ height: '40px', width: '40px', objectFit: 'contain', cursor: 'pointer' }}
-                        onClick={() => router.push('/')}
-                    />
+                <nav className="topbar topbar-center">
+                    <button className="brandbutton" onClick={() => router.push('/')} aria-label="Back to home">
+                        <img src="/logo.png?v=1" alt="BeDownloader" className="brandmark" />
+                        <span className="brandname">BeDownloader</span>
+                    </button>
                 </nav>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', marginTop: '100px' }}>
-                    <div className="spinner"></div>
-                    <p className="text-secondary">Analyzing content...</p>
+                <div className="loading-wrap">
+                    <div className="spinner" />
+                    <p className="text-secondary">Analyzing content…</p>
                 </div>
             </div>
         );
@@ -145,20 +146,19 @@ function ExtractionContent() {
     if (error) {
         return (
             <div className="container section-padding text-center fade-in">
-                <nav style={{ marginBottom: '64px' }}>
-                    <img
-                        src={`/logo.png?v=${Date.now()}`}
-                        alt="BeDownloader"
-                        style={{ height: '40px', width: '40px', objectFit: 'contain', cursor: 'pointer' }}
-                        onClick={() => router.push('/')}
-                    />
+                <nav className="topbar topbar-center">
+                    <button className="brandbutton" onClick={() => router.push('/')} aria-label="Back to home">
+                        <img src={`/logo.png?v=${Date.now()}`} alt="BeDownloader" className="brandmark" />
+                        <span className="brandname">BeDownloader</span>
+                    </button>
                 </nav>
-                <div style={{ marginTop: '100px' }}>
-                    <h2 style={{ color: '#EF4444', marginBottom: '16px' }}>Extraction Failed</h2>
-                    <p className="text-secondary" style={{ marginBottom: '32px' }}>
+
+                <div className="error-wrap">
+                    <h2 className="error-title">Extraction failed</h2>
+                    <p className="text-secondary error-subtitle">
                         {typeof error === 'string' ? error : (error as any).message || 'An unexpected error occurred'}
                     </p>
-                    <button className="btn btn-primary" onClick={() => router.push('/')}>Try Another URL</button>
+                    <button className="btn btn-primary" onClick={() => router.push('/')}>Try another URL</button>
                 </div>
             </div>
         );
@@ -166,172 +166,136 @@ function ExtractionContent() {
 
     return (
         <main className="container section-padding fade-in">
-            <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '64px' }}>
-                <img
-                    src="/logo.png?v=1"
-                    alt="BeDownloader"
-                    style={{ height: '40px', width: '40px', objectFit: 'contain', cursor: 'pointer' }}
-                    onClick={() => router.push('/')}
-                />
-                <button className="btn btn-secondary" onClick={() => router.push('/')}>New Extraction</button>
+            <nav className="topbar">
+                <button className="brandbutton" onClick={() => router.push('/')} aria-label="Back to home">
+                    <img src="/logo.png?v=1" alt="BeDownloader" className="brandmark" />
+                    <span className="brandname">BeDownloader</span>
+                </button>
+
+                <button className="btn btn-secondary" onClick={() => router.push('/')}>New extraction</button>
             </nav>
 
-            <div style={{
-                backgroundColor: 'var(--surface-color)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '12px',
-                padding: '24px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '40px'
-            }}>
-                <div>
-                    <h2 style={{ fontSize: '20px', marginBottom: '4px' }}>Extraction Finished</h2>
-                    <p className="text-secondary" style={{ fontSize: '14px' }}>Found {results.length} assets from the project</p>
+            <div className="summary">
+                <div className="summary-left">
+                    <div className="summary-kicker">Extraction finished</div>
+                    <div className="summary-title">{results.length} assets ready</div>
+                    <div className="summary-sub text-secondary">
+                        Project: <span className="mono">{projectName}</span>
+                    </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', marginRight: '12px' }} className="text-secondary">
+
+                <div className="summary-right">
+                    <label className="confirm">
                         <input
                             type="checkbox"
                             checked={isConfirmed}
                             onChange={(e) => setIsConfirmed(e.target.checked)}
-                            style={{ width: '16px', height: '16px', accentColor: 'var(--accent-blue)' }}
                         />
-                        Confirm public access
+                        <span>
+                            Confirm public access
+                            <span className="confirm-sub text-secondary">Required before downloads</span>
+                        </span>
                     </label>
-                    <button
-                        className="btn btn-primary"
-                        disabled={!isConfirmed || downloading}
-                        onClick={handleDownloadAll}
-                        style={{ minWidth: '140px' }}
-                    >
-                        {downloading ? 'Preparing...' : `All ${results.length}`}
-                    </button>
-                    {hasImages && (
-                        <button
-                            className="btn btn-secondary"
-                            disabled={!isConfirmed || downloading}
-                            onClick={() => downloadByType('image')}
-                            style={{ minWidth: '140px', borderColor: '#10B981', color: '#10B981' }}
-                        >
-                            Only Images
+
+                    <div className="chiprow">
+                        <button className="chip chip-primary" disabled={!isConfirmed || downloading} onClick={handleDownloadAll}>
+                            {downloading ? 'Preparing…' : `Download all (${results.length})`}
                         </button>
-                    )}
-                    {hasGifs && (
-                        <button
-                            className="btn btn-secondary"
-                            disabled={!isConfirmed || downloading}
-                            onClick={() => downloadByType('gif')}
-                            style={{ minWidth: '140px', borderColor: '#F59E0B', color: '#F59E0B' }}
-                        >
-                            Only GIFs
-                        </button>
-                    )}
-                    {hasVideos && (
-                        <button
-                            className="btn btn-secondary"
-                            disabled={!isConfirmed || downloading}
-                            onClick={() => downloadByType('video')}
-                            style={{ minWidth: '140px', borderColor: '#6366F1', color: '#6366F1' }}
-                        >
-                            Only Videos
-                        </button>
-                    )}
+                        {hasImages && (
+                            <button className="chip chip-green" disabled={!isConfirmed || downloading} onClick={() => downloadByType('image')}>
+                                Images
+                            </button>
+                        )}
+                        {hasGifs && (
+                            <button className="chip chip-amber" disabled={!isConfirmed || downloading} onClick={() => downloadByType('gif')}>
+                                GIFs
+                            </button>
+                        )}
+                        {hasVideos && (
+                            <button className="chip chip-indigo" disabled={!isConfirmed || downloading} onClick={() => downloadByType('video')}>
+                                Videos
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
-                {results.map((asset) => (
-                    <div key={asset.id} className="card">
-                        <div style={{ position: 'relative', paddingTop: '56.25%', backgroundColor: '#000' }}>
-                            <img
-                                src={asset.thumbUrl}
-                                alt={asset.title}
-                                loading="lazy"
-                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                            <div style={{
-                                position: 'absolute',
-                                top: '12px',
-                                right: '12px',
-                                padding: '4px 8px',
-                                backgroundColor: 'rgba(0,0,0,0.6)',
-                                borderRadius: '4px',
-                                fontSize: '10px',
-                                fontWeight: 600,
-                                textTransform: 'uppercase'
-                            }}>
-                                {asset.ext}
+            {results.length === 0 ? (
+                <div className="empty">
+                    <div className="empty-title">No assets found</div>
+                    <div className="text-secondary empty-sub">Try a different public Behance project URL.</div>
+                    <button className="btn btn-primary" onClick={() => router.push('/')}>New extraction</button>
+                </div>
+            ) : (
+                <div className="asset-grid">
+                    {results.map((asset) => (
+                        <div key={asset.id} className="asset card">
+                            <div className="asset-thumb">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={asset.thumbUrl} alt={asset.title} loading="lazy" />
+                                <div className="asset-badge">{asset.ext}</div>
                             </div>
-                        </div>
-                        <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '14px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
-                                {asset.title}
-                            </span>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <a
-                                    href={asset.downloadUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="btn-icon"
-                                    title="Open source"
-                                >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                        <polyline points="15 3 21 3 21 9"></polyline>
-                                        <line x1="10" y1="14" x2="21" y2="3"></line>
-                                    </svg>
-                                </a>
-                                {asset.variants && asset.variants.length > 1 && (
-                                    <select
-                                        onChange={(e) => handleVariantChange(asset.id, e.target.value)}
-                                        value={asset.downloadUrl}
-                                        style={{
-                                            background: 'var(--surface-hover)',
-                                            color: 'var(--text-primary)',
-                                            border: '1px solid var(--border-color)',
-                                            borderRadius: '4px',
-                                            padding: '0 8px',
-                                            height: '36px',
-                                            fontSize: '12px',
-                                            outline: 'none',
-                                            cursor: 'pointer'
-                                        }}
+
+                            <div className="asset-meta">
+                                <div className="asset-title" title={asset.title}>{asset.title}</div>
+
+                                <div className="asset-actions">
+                                    <a
+                                        href={asset.downloadUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="btn-icon"
+                                        title="Open source"
                                     >
-                                        {asset.variants.map(v => (
-                                            <option key={v.resolution} value={v.downloadUrl}>
-                                                {v.resolution}
-                                            </option>
-                                        ))}
-                                    </select>
-                                )}
-                                <button
-                                    onClick={() => {
-                                        const proxyUrl = `/api/proxy?url=${encodeURIComponent(asset.downloadUrl)}&filename=${encodeURIComponent(asset.title)}.${asset.ext}`;
-                                        downloadFileFromApi(proxyUrl, `${asset.title}.${asset.ext}`);
-                                    }}
-                                    className="btn-icon"
-                                    title="Download"
-                                >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                        <polyline points="7 10 12 15 17 10"></polyline>
-                                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                                    </svg>
-                                </button>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                            <polyline points="15 3 21 3 21 9"></polyline>
+                                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                                        </svg>
+                                    </a>
+
+                                    {asset.variants && asset.variants.length > 1 && (
+                                        <select
+                                            onChange={(e) => handleVariantChange(asset.id, e.target.value)}
+                                            value={asset.downloadUrl}
+                                            className="variant"
+                                            aria-label="Choose resolution"
+                                        >
+                                            {asset.variants.map((v) => (
+                                                <option key={v.resolution} value={v.downloadUrl}>
+                                                    {v.resolution}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+
+                                    <button
+                                        onClick={() => {
+                                            const proxyUrl = `/api/proxy?url=${encodeURIComponent(asset.downloadUrl)}&filename=${encodeURIComponent(asset.title)}.${asset.ext}`;
+                                            downloadFileFromApi(proxyUrl, `${asset.title}.${asset.ext}`);
+                                        }}
+                                        className="btn-icon"
+                                        title="Download"
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
         </main>
     );
 }
 
 export default function ExtractPage() {
     return (
-        <Suspense fallback={<div className="container section-padding text-center">Loading...</div>}>
+        <Suspense fallback={<div className="container section-padding text-center">Loading…</div>}>
             <ExtractionContent />
         </Suspense>
     );
