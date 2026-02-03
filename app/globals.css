@@ -766,6 +766,18 @@ h6 {
   border-color: rgba(37, 99, 235, 0.65);
 }
 
+.chip-selected {
+  border-color: rgba(96, 165, 250, 0.65);
+  color: rgba(191, 219, 254, 1);
+}
+
+.selection-note {
+  margin-top: 8px;
+  font-size: 12px;
+  text-align: right;
+  opacity: 0.9;
+}
+
 .chip-green {
   border-color: rgba(16, 185, 129, 0.6);
   color: rgba(16, 185, 129, 1);
@@ -789,6 +801,17 @@ h6 {
 
 .asset {
   overflow: hidden;
+  cursor: pointer;
+}
+
+.asset:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.asset-selected {
+  border-color: rgba(96, 165, 250, 0.55) !important;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.12), var(--shadow-soft);
 }
 
 .asset-thumb {
@@ -822,6 +845,30 @@ h6 {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.asset-check {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(245, 246, 248, 0.8);
+  font-weight: 900;
+  transform: scale(0.98);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.asset-check-on {
+  background: rgba(37, 99, 235, 0.25);
+  border-color: rgba(37, 99, 235, 0.55);
+  color: rgba(191, 219, 254, 1);
 }
 
 .asset-meta {

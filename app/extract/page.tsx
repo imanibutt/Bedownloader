@@ -86,6 +86,43 @@ function ExtractionContent() {
         }
     };
 
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+    const selectedItems = useMemo(() => {
+        if (selectedIds.size === 0) return [] as MediaItem[];
+        const set = selectedIds;
+        return results.filter((r) => set.has(r.id));
+    }, [results, selectedIds]);
+
+    const toggleSelected = (id: string) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const selectAll = () => setSelectedIds(new Set(results.map((r) => r.id)));
+    const clearSelection = () => setSelectedIds(new Set());
+
+    const handleDownloadSelected = async () => {
+        if (!isConfirmed || selectedItems.length === 0) return;
+
+        setDownloading(true);
+        try {
+            const zipFilename = `${projectName}-selected-assets.zip`;
+            await downloadZipFromApi('/api/download-zip', zipFilename, {
+                assets: selectedItems.map((r) => ({ url: r.downloadUrl, filename: `${r.title}.${r.ext}` })),
+                filename: zipFilename,
+            });
+        } catch (err) {
+            console.error('Selected download failed', err);
+        } finally {
+            setDownloading(false);
+        }
+    };
+
     const downloadByType = async (type: string) => {
         if (!isConfirmed || results.length === 0) return;
 
@@ -201,6 +238,23 @@ function ExtractionContent() {
                         <button className="chip chip-primary" disabled={!isConfirmed || downloading} onClick={handleDownloadAll}>
                             {downloading ? 'Preparing…' : `Download all (${results.length})`}
                         </button>
+
+                        <button
+                            className="chip chip-selected"
+                            disabled={!isConfirmed || downloading || selectedItems.length === 0}
+                            onClick={handleDownloadSelected}
+                            title={selectedItems.length === 0 ? 'Select assets below' : 'Download selected as ZIP'}
+                        >
+                            {downloading ? 'Preparing…' : `Download selected (${selectedItems.length})`}
+                        </button>
+
+                        <button className="chip" disabled={downloading || results.length === 0} onClick={selectAll}>
+                            Select all
+                        </button>
+                        <button className="chip" disabled={downloading || selectedItems.length === 0} onClick={clearSelection}>
+                            Clear
+                        </button>
+
                         {hasImages && (
                             <button className="chip chip-green" disabled={!isConfirmed || downloading} onClick={() => downloadByType('image')}>
                                 Images
@@ -217,6 +271,10 @@ function ExtractionContent() {
                             </button>
                         )}
                     </div>
+
+                    <div className="text-secondary selection-note">
+                        Tip: click any card to select it — selected items get a blue ring.
+                    </div>
                 </div>
             </div>
 
@@ -228,65 +286,84 @@ function ExtractionContent() {
                 </div>
             ) : (
                 <div className="asset-grid">
-                    {results.map((asset) => (
-                        <div key={asset.id} className="asset card">
-                            <div className="asset-thumb">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={asset.thumbUrl} alt={asset.title} loading="lazy" />
-                                <div className="asset-badge">{asset.ext}</div>
-                            </div>
+                    {results.map((asset) => {
+                        const isSelected = selectedIds.has(asset.id);
+                        return (
+                            <div
+                                key={asset.id}
+                                className={`asset card ${isSelected ? 'asset-selected' : ''}`}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => toggleSelected(asset.id)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        toggleSelected(asset.id);
+                                    }
+                                }}
+                                aria-label={`Select asset ${asset.title}`}
+                            >
+                                <div className="asset-thumb">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={asset.thumbUrl} alt={asset.title} loading="lazy" />
+                                    <div className="asset-badge">{asset.ext}</div>
+                                    <div className={`asset-check ${isSelected ? 'asset-check-on' : ''}`} aria-hidden>
+                                        ✓
+                                    </div>
+                                </div>
 
-                            <div className="asset-meta">
-                                <div className="asset-title" title={asset.title}>{asset.title}</div>
+                                <div className="asset-meta">
+                                    <div className="asset-title" title={asset.title}>{asset.title}</div>
 
-                                <div className="asset-actions">
-                                    <a
-                                        href={asset.downloadUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="btn-icon"
-                                        title="Open source"
-                                    >
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                            <polyline points="15 3 21 3 21 9"></polyline>
-                                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                                        </svg>
-                                    </a>
-
-                                    {asset.variants && asset.variants.length > 1 && (
-                                        <select
-                                            onChange={(e) => handleVariantChange(asset.id, e.target.value)}
-                                            value={asset.downloadUrl}
-                                            className="variant"
-                                            aria-label="Choose resolution"
+                                    <div className="asset-actions" onClick={(e) => e.stopPropagation()}>
+                                        <a
+                                            href={asset.downloadUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="btn-icon"
+                                            title="Open source"
                                         >
-                                            {asset.variants.map((v) => (
-                                                <option key={v.resolution} value={v.downloadUrl}>
-                                                    {v.resolution}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    )}
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                                <polyline points="15 3 21 3 21 9"></polyline>
+                                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                                            </svg>
+                                        </a>
 
-                                    <button
-                                        onClick={() => {
-                                            const proxyUrl = `/api/proxy?url=${encodeURIComponent(asset.downloadUrl)}&filename=${encodeURIComponent(asset.title)}.${asset.ext}`;
-                                            downloadFileFromApi(proxyUrl, `${asset.title}.${asset.ext}`);
-                                        }}
-                                        className="btn-icon"
-                                        title="Download"
-                                    >
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                            <polyline points="7 10 12 15 17 10"></polyline>
-                                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                                        </svg>
-                                    </button>
+                                        {asset.variants && asset.variants.length > 1 && (
+                                            <select
+                                                onChange={(e) => handleVariantChange(asset.id, e.target.value)}
+                                                value={asset.downloadUrl}
+                                                className="variant"
+                                                aria-label="Choose resolution"
+                                            >
+                                                {asset.variants.map((v) => (
+                                                    <option key={v.resolution} value={v.downloadUrl}>
+                                                        {v.resolution}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
+
+                                        <button
+                                            onClick={() => {
+                                                const proxyUrl = `/api/proxy?url=${encodeURIComponent(asset.downloadUrl)}&filename=${encodeURIComponent(asset.title)}.${asset.ext}`;
+                                                downloadFileFromApi(proxyUrl, `${asset.title}.${asset.ext}`);
+                                            }}
+                                            className="btn-icon"
+                                            title="Download"
+                                        >
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7 10 12 15 17 10"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </main>
