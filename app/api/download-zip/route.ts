@@ -2,9 +2,48 @@ import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 import archiver from 'archiver';
 import { PassThrough } from 'stream';
+import http from 'http';
+import https from 'https';
 import { isUrlAllowed } from '@/lib/security';
 
 export const runtime = 'nodejs'; // Ensure Node.js runtime
+
+const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 32 });
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 32 });
+
+const client = axios.create({
+    httpAgent,
+    httpsAgent,
+    maxRedirects: 3,
+    timeout: 60000,
+    validateStatus: (s) => s >= 200 && s < 400,
+});
+
+async function sleep(ms: number) {
+    return new Promise((r) => setTimeout(r, ms));
+}
+
+async function fetchStreamWithRetry(url: string, attempt = 0): Promise<any> {
+    try {
+        return await client({
+            method: 'get',
+            url,
+            responseType: 'stream',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                Referer: 'https://www.behance.net/',
+            },
+        });
+    } catch (err: any) {
+        const status = err?.response?.status;
+        const retryable = status === 429 || (status >= 500 && status <= 599) || !status;
+        if (retryable && attempt < 2) {
+            await sleep(350 * Math.pow(2, attempt));
+            return fetchStreamWithRetry(url, attempt + 1);
+        }
+        throw err;
+    }
+}
 
 export async function POST(req: NextRequest) {
     let outputFilename = 'behance-assets.zip';
@@ -37,9 +76,10 @@ export async function POST(req: NextRequest) {
         }
 
         const archive = archiver('zip', {
-            zlib: { level: 0 } // No compression = Max throughput (stored only)
+            zlib: { level: 0 },
+            store: true // true stored entries (no compression)
         });
-        const stream = new PassThrough();
+        const stream = new PassThrough({ highWaterMark: 1024 * 1024 });
 
         // Error handling for archive
         archive.on('error', (err) => {
@@ -49,10 +89,19 @@ export async function POST(req: NextRequest) {
 
         archive.pipe(stream);
 
+        // Push a tiny file first so the response starts immediately (avoids "resuming" feel)
+        archive.append(
+            Buffer.from(
+                `BeDownloader\n\nThis ZIP is streamed as assets are fetched.\nIf a project is large, the download may appear to pause while files are being added.\n\nPublic projects only.\n`
+            ),
+            { name: 'README.txt' }
+        );
+
         // Background Processing
         (async () => {
             try {
-                const CONCURRENCY_LIMIT = 15;
+                // Too high concurrency can trigger upstream throttling; this is a safer default.
+                const CONCURRENCY_LIMIT = 6;
                 const queue = [...assets];
 
                 const runWorker = async () => {
@@ -61,20 +110,14 @@ export async function POST(req: NextRequest) {
                         if (!asset || !asset.url || !isUrlAllowed(asset.url)) continue;
 
                         try {
-                            const response = await axios({
-                                method: 'get',
-                                url: asset.url,
-                                responseType: 'stream',
-                                headers: {
-                                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                                    'Referer': 'https://www.behance.net/',
-                                },
-                                timeout: 60000
-                            });
+                            const response = await fetchStreamWithRetry(asset.url);
 
-                            const filename = asset.filename || `asset-${Math.random().toString(36).substring(7)}.jpg`;
+                            const filename = (asset.filename || `asset-${Math.random().toString(36).substring(7)}.bin`)
+                                .toString()
+                                .replace(/[^a-zA-Z0-9.\-_]/g, '_');
 
-                            // Create a promise to wait for this entry to be fully processed
+                            // Wait for this stream to finish before taking the next item in this worker
+                            // (keeps open connections bounded and plays nicely with zip entry ordering).
                             const entryFinished = new Promise((resolve) => {
                                 response.data.on('end', resolve);
                                 response.data.on('error', resolve);
@@ -83,7 +126,7 @@ export async function POST(req: NextRequest) {
                             archive.append(response.data, { name: filename });
                             await entryFinished;
                         } catch (err: any) {
-                            console.error(`Failed to download ${asset.url}: ${err.message}`);
+                            console.error(`Failed to download ${asset.url}: ${err?.message || err}`);
                         }
                     }
                 };
