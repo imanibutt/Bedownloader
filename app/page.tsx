@@ -26,18 +26,18 @@ export default function Home() {
 
       <section className="text-center" style={{ maxWidth: '800px', margin: '0 auto' }}>
         <h1 style={{ fontSize: '48px', marginBottom: '16px', fontWeight: 700 }}>
-          Download Assets from Behance, YouTube & More
+          Download Assets from Behance and Dribbble
         </h1>
         <p className="text-secondary" style={{ fontSize: '18px', marginBottom: '40px' }}>
-          Extract high-resolution images and videos instantly from Behance, YouTube, Instagram, and TikTok.
-          Professional utility for creators.
+          Extract high-resolution images and videos from Behance projects.
+          Dribbble support is planned and will use the Chrome extension flow.
         </p>
 
         <form onSubmit={handleSearch} className="input-group">
           <input
             type="text"
             className="input-main"
-            placeholder="Paste URL from Behance, YouTube, Instagram, or TikTok..."
+            placeholder="Paste a Behance project or Dribbble shot URL..."
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />

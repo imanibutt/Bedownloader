@@ -12,6 +12,8 @@ export interface MediaItem {
     ext: string;
     resolution?: string;
     variants?: MediaVariant[];
+    platform?: string;
+    sourceUrl?: string;
 }
 
 export interface Extractor {

@@ -98,11 +98,20 @@ export async function GET(req: NextRequest) {
 
     } catch (error: any) {
         console.error('Extraction error:', error);
+
+        const msg = error?.message || 'Failed to extract assets';
+        const isClientError = typeof msg === 'string' && (
+            msg.includes('blocked this request') ||
+            msg.includes('WAF challenge') ||
+            msg.includes('Invalid') ||
+            msg.includes('No extractor')
+        );
+
         return NextResponse.json({
             error: {
-                code: 'EXTRACTION_FAILED',
-                message: error.message || 'Failed to extract assets'
+                code: isClientError ? 'UNSUPPORTED' : 'EXTRACTION_FAILED',
+                message: msg
             }
-        }, { status: 500 });
+        }, { status: isClientError ? 400 : 500 });
     }
 }

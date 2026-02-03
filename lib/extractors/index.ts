@@ -1,20 +1,12 @@
 import { BehanceExtractor } from './behance';
-import { YouTubeExtractor } from './youtube';
-import { InstagramExtractor } from './instagram';
-import { TikTokExtractor } from './tiktok';
-import { GenericExtractor } from './generic';
+import { DribbbleExtractor } from './dribbble';
 import { Extractor } from './types';
 
-const extractors: Extractor[] = [
-    new BehanceExtractor(),
-    new YouTubeExtractor(),
-    new InstagramExtractor(),
-    new TikTokExtractor(),
-];
+// Design-focused extractors only
+const extractors: Extractor[] = [new BehanceExtractor(), new DribbbleExtractor()];
 
-export function getExtractor(url: string): Extractor {
-    const specific = extractors.find(extractor => extractor.canHandle(url));
-    if (specific) return specific;
-
-    return new GenericExtractor();
+export function getExtractor(url: string): Extractor | null {
+  const specific = extractors.find(extractor => extractor.canHandle(url));
+  return specific || null;
 }
+
