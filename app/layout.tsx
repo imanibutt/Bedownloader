@@ -2,8 +2,23 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BeDownloader | Professional Behance Asset Extraction",
-  description: "Download every high-resolution image and animation from Behance projects instantly. Specialized for designers and agencies.",
+  title: {
+    default: "BeDownloader | Behance Asset Downloader",
+    template: "%s | BeDownloader"
+  },
+  description:
+    "Download high-resolution images and assets from public Behance projects. Built for designers and creative teams.",
+  metadataBase: new URL("https://bedownloader.vercel.app"),
+  openGraph: {
+    title: "BeDownloader",
+    description:
+      "Download high-resolution images and assets from public Behance projects.",
+    url: "https://bedownloader.vercel.app",
+    type: "website"
+  },
+  alternates: {
+    canonical: "/"
+  }
 };
 
 export default function RootLayout({
