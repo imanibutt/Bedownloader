@@ -33,7 +33,7 @@ export default function Home() {
     <main className="container section-padding fade-in">
       <div className="hero-wrap">
         <nav className="brandbar">
-          <img src="/logo.svg" alt="BeDownloader Logo" className="brandmark" />
+          <img src="/logo.png?v=2" alt="BeDownloader Logo" className="brandmark" />
           <span className="brandname">BeDownloader</span>
           <span className="pill">Dribbble — Coming soon</span>
         </nav>

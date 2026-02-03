@@ -86,7 +86,7 @@ export default function BehanceDownloaderPage() {
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="brand-link">
             <div className="icon-container-sm">
-              <img src="/logo.svg" alt="Logo" className="w-6 h-6 object-contain" />
+              <img src="/logo.png?v=2" alt="Logo" className="w-6 h-6 object-contain" />
             </div>
             <span className="text-xl font-bold tracking-tight">BeDownloader</span>
           </Link>

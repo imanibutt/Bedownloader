@@ -168,7 +168,7 @@ function ExtractionContent() {
             <div className="container section-padding text-center fade-in">
                 <nav className="topbar topbar-center">
                     <button className="brandbutton" onClick={() => router.push('/')} aria-label="Back to home">
-                        <img src="/logo.svg" alt="BeDownloader" className="brandmark" />
+                        <img src="/logo.png?v=2" alt="BeDownloader" className="brandmark" />
                         <span className="brandname">BeDownloader</span>
                     </button>
                 </nav>
@@ -201,7 +201,7 @@ function ExtractionContent() {
             <div className="container section-padding text-center fade-in">
                 <nav className="topbar topbar-center">
                     <button className="brandbutton" onClick={() => router.push('/')} aria-label="Back to home">
-                        <img src="/logo.svg" alt="BeDownloader" className="brandmark" />
+                        <img src="/logo.png?v=2" alt="BeDownloader" className="brandmark" />
                         <span className="brandname">BeDownloader</span>
                     </button>
                 </nav>
@@ -221,7 +221,7 @@ function ExtractionContent() {
         <main className="container section-padding fade-in">
             <nav className="topbar">
                 <button className="brandbutton" onClick={() => router.push('/')} aria-label="Back to home">
-                    <img src="/logo.svg" alt="BeDownloader" className="brandmark" />
+                    <img src="/logo.png?v=2" alt="BeDownloader" className="brandmark" />
                     <span className="brandname">BeDownloader</span>
                 </button>
 
