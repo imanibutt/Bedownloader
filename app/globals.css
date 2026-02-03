@@ -320,14 +320,15 @@ h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
   margin-bottom: 52px;
 }
 
 .brandmark {
-  height: 34px;
-  width: 34px;
+  height: 46px;
+  width: 46px;
   object-fit: contain;
+  display: block;
 }
 
 .brandname {
