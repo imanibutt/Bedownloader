@@ -1,0 +1,32 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BeDownloader logo">
+  <defs>
+    <linearGradient id="g" x1="24" y1="20" x2="104" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#60A5FA"/>
+      <stop offset="0.55" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(64 32) rotate(90) scale(78)">
+      <stop stop-color="#60A5FA" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#60A5FA" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <!-- soft glow -->
+  <circle cx="64" cy="64" r="54" fill="url(#glow)"/>
+
+  <!-- mark -->
+  <g filter="url(#shadow)">
+    <rect x="20" y="20" width="88" height="88" rx="22" fill="#0E0E11"/>
+    <rect x="20" y="20" width="88" height="88" rx="22" stroke="rgba(255,255,255,0.10)"/>
+
+    <!-- monogram B -->
+    <path d="M49 40.5H71.2C79.3 40.5 85 45.6 85 52.6C85 57.8 82 61.7 77.4 63.3C83.2 64.7 87 69.1 87 74.9C87 83 80.9 88.5 71.7 88.5H49V40.5ZM59.6 49.2V60.1H70.5C74.4 60.1 76.8 57.9 76.8 54.7C76.8 51.4 74.4 49.2 70.5 49.2H59.6ZM59.6 68V79.8H71.1C75.4 79.8 78.2 77.4 78.2 73.9C78.2 70.5 75.4 68 71.1 68H59.6Z" fill="url(#g)"/>
+
+    <!-- download arrow (subtle) -->
+    <path d="M64 54V76" stroke="rgba(245,246,248,0.78)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M55.5 69.5L64 78L72.5 69.5" stroke="rgba(245,246,248,0.78)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
